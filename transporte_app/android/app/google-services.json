@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "929349685383",
+    "project_id": "juliaca-transporte-hack",
+    "storage_bucket": "juliaca-transporte-hack.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:929349685383:android:6af5119bd12d0920bf6822",
+        "android_client_info": {
+          "package_name": "com.example.transporte_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDaRp_k5Omns-XcwD3AsKDk1k8Yaz92Y08"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
