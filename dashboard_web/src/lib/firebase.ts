@@ -4,12 +4,12 @@ import { getAuth } from "firebase/auth";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyCMhkO5vTgedYHobkBo8njpy24yJPGPU_E",
-  authDomain: "juliaca-transporte-hack.firebaseapp.com",
-  projectId: "juliaca-transporte-hack",
-  storageBucket: "juliaca-transporte-hack.firebasestorage.app",
-  messagingSenderId: "929349685383",
-  appId: "1:929349685383:web:53d5242e5d1186f2bf6822"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
 // Inicializar Firebase (con la protección para Next.js para evitar errores)
