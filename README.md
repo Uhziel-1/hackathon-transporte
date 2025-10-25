@@ -75,7 +75,7 @@ Asegúrate de tener todo esto instalado en tu sistema:
 
 ### 3. Ejecutar el Entorno Completo
 
-Para trabajar, necesitas **3 terminales abiertas** al mismo tiempo.
+Para trabajar, necesitas **4 terminales abiertas** al mismo tiempo.
 
 #### Terminal 1: Backend (Firebase Emulators)
 
@@ -112,24 +112,29 @@ npm run dev
 
 ---
 
-#### Terminal 3: App Móvil (Flutter)
-```bash
-# 1. Ve a la carpeta web
-cd dashboard_web
-
-# 2. Inicia el servidor de desarrollo
-npm run dev
-```
-
-- App Web corriendo en: `http://localhost:3000`
-
----
-
-#### Terminal 3: App Móvil (Flutter)
+#### Terminal 3: App Móvil Conductor (Flutter)
 
 ```bash
 # 1. Ve a la carpeta móvil
 cd transporte_app
+
+# 2. Conecta un emulador de Android o un teléfono físico
+
+# 3. Ejecuta la app
+flutter run
+```
+
+- Usa **'r' (Hot Reload)** para aplicar cambios al instante.
+
+- Usa **'R' (Hot Restart)** para reiniciar la app.
+
+---
+
+#### Terminal 4: App Móvil Pasajero (Flutter)
+
+```bash
+# 1. Ve a la carpeta móvil
+cd pasajero_app
 
 # 2. Conecta un emulador de Android o un teléfono físico
 
