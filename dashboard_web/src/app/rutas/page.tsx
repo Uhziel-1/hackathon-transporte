@@ -4,7 +4,8 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/app/context/AuthContext';
 import DashboardLayout from '@/components/DashboardLayout';
-import GestionRutas from '@/components/GestionRutas'; // Importar el componente principal
+import dynamic from 'next/dynamic';
+const GestionRutas = dynamic(() => import('@/components/GestionRutas'), { ssr: false });
 
 export default function RutasPage() {
   const { user, isLoading } = useAuth();
