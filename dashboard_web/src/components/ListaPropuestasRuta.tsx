@@ -8,6 +8,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import VisualizadorRutaModal from './VisualizadorRutaModal'; // Importar Modal
 import { Eye, Check, X, Loader2, History, AlertCircle } from 'lucide-react'; // Iconos (añadir History, AlertCircle)
+import CreadorRutaModal from './CreadorRutaModal';
 
 // Interfaz para la propuesta combinada
 interface PropuestaRuta {
@@ -68,6 +69,7 @@ export default function ListaPropuestasRuta() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [rutaSeleccionada, setRutaSeleccionada] = useState<RutaParaVisualizar | null>(null);
+  const [mostrarCreador, setMostrarCreador] = useState(false);
 
   useEffect(() => {
     // --- CAMBIO: Quitar el filtro 'where' para mostrar todas ---
@@ -205,6 +207,14 @@ export default function ListaPropuestasRuta() {
 
   return (
     <div className="overflow-x-auto shadow-md rounded-lg">
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={() => setMostrarCreador(true)}
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 shadow"
+        >
+          + Crear nueva ruta
+        </button>
+      </div>
       <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
         <thead className="bg-gray-50 dark:bg-gray-800">
           <tr>
@@ -219,29 +229,26 @@ export default function ListaPropuestasRuta() {
         </thead>
         <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-900 dark:divide-gray-700">
           {propuestas.map((propuesta) => (
-            <tr key={propuesta.id} className={`hover:bg-gray-50 dark:hover:bg-gray-800 ${propuesta.estadoPropuesta !== 'pendiente' ? 'opacity-70' : ''}`}> {/* Atenuar no pendientes */}
+            <tr key={propuesta.id} className={`hover:bg-gray-50 dark:hover:bg-gray-800 ${propuesta.estadoPropuesta !== 'pendiente' ? 'opacity-70' : ''}`}>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                  {propuesta.fechaPropuesta ? formatDistanceToNow(propuesta.fechaPropuesta, { addSuffix: true, locale: es }) : 'N/A'}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{propuesta.nombreLinea}</td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{propuesta.propuestaIdaVuelta.toUpperCase()}</td>
-               <td className="px-6 py-4 whitespace-nowrap text-sm"><EstadoPropuestaBadge estado={propuesta.estadoPropuesta} /></td> {/* <-- MOSTRAR ESTADO */}
+              <td className="px-6 py-4 whitespace-nowrap text-sm"><EstadoPropuestaBadge estado={propuesta.estadoPropuesta} /></td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{propuesta.propuestoPorNombre}</td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{propuesta.puntosGrabados.length}</td>
               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                {/* Mostrar spinner si se está procesando */}
                 {propuesta.isProcessing ? (
                      <Loader2 size={18} className="animate-spin inline-block text-gray-500" />
                 ) : (
                     <>
-                        <button onClick={() => handleVisualizar(propuesta)} title="Visualizar Ruta" className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 disabled:opacity-50" disabled={propuesta.isProcessing || propuesta.puntosGrabados.length === 0}> {/* Deshabilitar si no hay puntos */}
+                        <button onClick={() => handleVisualizar(propuesta)} title="Visualizar Ruta" className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 disabled:opacity-50" disabled={propuesta.isProcessing || propuesta.puntosGrabados.length === 0}>
                             <Eye size={18} />
                         </button>
-                         {/* Permitir (Re)Aprobar siempre que haya puntos */}
                         <button onClick={() => handleActualizarEstado(propuesta, 'aprobada')} title="Aprobar y Activar Ruta" className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 disabled:opacity-50" disabled={propuesta.isProcessing || propuesta.puntosGrabados.length === 0}>
                             <Check size={18} />
                         </button>
-                         {/* Permitir Rechazar si no está ya rechazada */}
                          {propuesta.estadoPropuesta !== 'rechazada' && (
                              <button onClick={() => handleActualizarEstado(propuesta, 'rechazada')} title="Rechazar" className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50" disabled={propuesta.isProcessing}>
                                 <X size={18} />
@@ -255,13 +262,16 @@ export default function ListaPropuestasRuta() {
         </tbody>
       </table>
 
-      {/* Renderizar el Modal (sin cambios) */}
       {rutaSeleccionada && (
         <VisualizadorRutaModal
           ruta={rutaSeleccionada}
           onClose={handleCloseModal}
         />
       )}
+      {mostrarCreador && (
+        <CreadorRutaModal onClose={() => setMostrarCreador(false)} />
+      )}
+
     </div>
   );
 }
