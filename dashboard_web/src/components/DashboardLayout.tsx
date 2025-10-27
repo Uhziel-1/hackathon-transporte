@@ -48,6 +48,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             <NavItem icon={Route} href="/rutas">Rutas Propuestas</NavItem>
             <NavItem icon={Users} href="/conductores">Conductores</NavItem>
             <NavItem icon={BarChart} href="/alertas">Alertas IA</NavItem>
+            <NavItem icon={Map} href="/ubicaciones">Ubicaciones POI</NavItem>
           </nav>
 
           {/* Footer del Sidebar (Logout) */}
