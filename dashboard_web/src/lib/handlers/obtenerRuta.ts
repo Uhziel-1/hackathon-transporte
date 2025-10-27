@@ -74,12 +74,17 @@ export async function handleBuscarRuta(params: {
       if (ida) {
         const ls = makeLineString(ida);
         const ni = nearestInfoOnLine(ls, destinationPoint);
-        if (typeof ni.distanceKm === 'number') distMin = Math.min(distMin, ni.distanceKm);
+        if (ni?.distanceKm != null) {
+          distMin = Math.min(distMin, ni.distanceKm);
+        }
       }
+
       if (vuelta) {
         const ls = makeLineString(vuelta);
         const ni = nearestInfoOnLine(ls, destinationPoint);
-        if (typeof ni.distanceKm === 'number') distMin = Math.min(distMin, ni.distanceKm);
+        if (ni?.distanceKm != null) {
+          distMin = Math.min(distMin, ni.distanceKm);
+        }
       }
     } catch (err) {
       console.warn('[obtenerRuta] Turf error for line', doc.id, err);
@@ -134,13 +139,19 @@ export async function handleBuscarRuta(params: {
         const nearestBus = nearestInfoOnLine(ls, busPoint);
         const nearestUser = nearestInfoOnLine(ls, userPoint);
 
-        if (nearestBus.index != null && nearestUser.index != null && nearestBus.index <= nearestUser.index
-            && typeof nearestBus.location === 'number' && typeof nearestUser.location === 'number') {
+        // ✅ Verificación de null
+        if (nearestBus && nearestUser &&
+            nearestBus.index != null && nearestUser.index != null &&
+            nearestBus.index <= nearestUser.index &&
+            typeof nearestBus.location === 'number' &&
+            typeof nearestUser.location === 'number') {
+    
           const startKm = Math.min(nearestBus.location, nearestUser.location);
           const endKm = Math.max(nearestBus.location, nearestUser.location);
           const slice = sliceAlongByDistance(ls, startKm, endKm);
           const distKm = lengthKm(slice);
           const etaMin = Math.max(1, Math.round((distKm / VELOCIDAD_PROMEDIO_KMH) * 60));
+    
           if (etaMin < mejorETA) mejorETA = etaMin;
         }
       } catch (err) {
