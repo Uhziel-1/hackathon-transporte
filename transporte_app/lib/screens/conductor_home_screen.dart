@@ -1,15 +1,13 @@
-import 'dart:async'; // Para el Timer
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:geolocator/geolocator.dart'; // Para el GPS
+import 'package:geolocator/geolocator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-// Importamos las otras pantallas
-// import 'package:transporte_app/screens/placeholder_screen.dart'; // Ya no lo usamos
 import 'package:transporte_app/screens/reportar_incidente_screen.dart';
 import 'package:transporte_app/screens/grabar_ruta_screen.dart';
 
 class PantallaPrincipalConductor extends StatefulWidget {
-  final String userId; // ID de Firebase Auth (authUid)
+  final String userId;
   const PantallaPrincipalConductor({super.key, required this.userId});
 
   @override
@@ -18,46 +16,61 @@ class PantallaPrincipalConductor extends StatefulWidget {
 }
 
 class _PantallaPrincipalConductorState
-    extends State<PantallaPrincipalConductor> {
+    extends State<PantallaPrincipalConductor> with TickerProviderStateMixin {
 
-  // --- Estado de la App ---
+  // --- Estado de la App (sin cambios en la lógica) ---
   bool _isLoading = true;
   String? _conductorIdFirestore;
   String? _vehiculoIdFirestore;
   DocumentReference? _vehiculoRef;
 
-  // Datos para mostrar en UI
   String _nombreConductor = 'Cargando...';
   String _placaVehiculo = 'Cargando...';
   String _lineaNombre = 'Cargando...';
   String _nombreTerminal1 = '';
   String _nombreTerminal2 = '';
-  bool _esAdmin = false; // <-- NUEVO: Para guardar el permiso
+  bool _esAdmin = false;
 
-  // Estado del servicio GPS
   bool _isTracking = false;
   String _currentEstadoVehiculo = '';
   String _feedbackMessage = 'Servicio detenido.';
   double _intervaloSegundos = 5.0;
   Timer? _gpsTimer;
 
+  // Animaciones
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
   @override
   void initState() {
     super.initState();
+    _setupAnimations();
     _buscarDatosIniciales();
+  }
+
+  void _setupAnimations() {
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat(reverse: true);
+    
+    _pulseAnimation = Tween<double>(
+      begin: 0.95,
+      end: 1.05,
+    ).animate(_pulseController);
   }
 
   @override
   void dispose() {
     _gpsTimer?.cancel();
+    _pulseController.dispose();
     super.dispose();
   }
 
-  // --- Lógica de Búsqueda Inicial ---
+  // --- Lógica de negocio (sin cambios) ---
   Future<void> _buscarDatosIniciales() async {
     setState(() { _isLoading = true; });
     try {
-      // 1. Buscar al conductor usando el authUid
       final conductorQuery = await FirebaseFirestore.instance
           .collection('Conductores')
           .where('authUid', isEqualTo: widget.userId)
@@ -70,10 +83,8 @@ class _PantallaPrincipalConductorState
       final conductorDoc = conductorQuery.docs.first;
       _conductorIdFirestore = conductorDoc.id;
       _nombreConductor = conductorDoc.data()['nombre'] ?? 'Nombre no encontrado';
-      _esAdmin = conductorDoc.data()['esAdminRutas'] ?? false; // <-- LEER PERMISO
+      _esAdmin = conductorDoc.data()['esAdminRutas'] ?? false;
 
-      // 2. Buscar el vehículo asignado a este conductor
-      // (Resto de la función sin cambios...)
       final vehiculoQuery = await FirebaseFirestore.instance
           .collection('Vehiculos')
           .where('conductorId', isEqualTo: _conductorIdFirestore)
@@ -89,7 +100,6 @@ class _PantallaPrincipalConductorState
       _placaVehiculo = vehiculoDoc.data()['placa'] ?? 'Placa no encontrada';
       _currentEstadoVehiculo = vehiculoDoc.data()['estado'] ?? 'fuera_de_servicio';
 
-
       final lineaId = vehiculoDoc.data()['lineaId'];
       if (lineaId != null) {
         final lineaDoc = await FirebaseFirestore.instance.collection('Lineas').doc(lineaId).get();
@@ -101,7 +111,6 @@ class _PantallaPrincipalConductorState
       }
 
       _actualizarFeedbackInicial();
-
       setState(() { _isLoading = false; });
 
     } catch (e) {
@@ -111,7 +120,7 @@ class _PantallaPrincipalConductorState
         _nombreConductor = 'Error';
         _placaVehiculo = 'Error';
         _feedbackMessage = 'Error al cargar datos: $e';
-        _esAdmin = false; // Asegurarse que no tenga permisos si hay error
+        _esAdmin = false;
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -121,7 +130,6 @@ class _PantallaPrincipalConductorState
     }
   }
 
-  // _actualizarFeedbackInicial sin cambios...
   void _actualizarFeedbackInicial() {
     switch (_currentEstadoVehiculo) {
       case 'en_ruta_ida':
@@ -144,8 +152,7 @@ class _PantallaPrincipalConductorState
     }
   }
 
-
-  // --- Lógica del GPS (Sin cambios) ---
+  // --- Lógica del GPS (sin cambios) ---
   Future<bool> _handlePermissions() async {
     LocationPermission permiso = await Geolocator.checkPermission();
     if (permiso == LocationPermission.denied) {
@@ -227,7 +234,7 @@ class _PantallaPrincipalConductorState
     if (_vehiculoRef == null) return;
     _gpsTimer?.cancel();
     _gpsTimer = null;
-    final nuevoEstado;
+    final String nuevoEstado;
     String mensajeFeedback;
     if (_currentEstadoVehiculo == 'en_ruta_ida') {
       nuevoEstado = 'en_terminal_2';
@@ -254,7 +261,6 @@ class _PantallaPrincipalConductorState
     }
   }
 
-  // --- Navegación a Otras Pantallas (Sin cambios internos, pero _irAModoAdmin se ocultará)---
   void _irAReportes() {
     if (_vehiculoIdFirestore != null) {
       Navigator.push(
@@ -271,155 +277,488 @@ class _PantallaPrincipalConductorState
   }
 
   void _irAModoAdmin() {
-     // Ya no necesitamos Placeholder aquí si lo ocultamos, pero lo dejamos por si acaso
     Navigator.push(
         context,
         MaterialPageRoute(
             builder: (context) => const PantallaGrabarRuta()));
   }
 
-  // --- UI ---
+  // --- UI MEJORADA CON DISEÑO FUTURISTA ---
   @override
   Widget build(BuildContext context) {
-    // Botones de acción (Sin cambios)...
-     List<Widget> botonesAccion = [];
-    if (_isLoading) {
-      botonesAccion.add(const Center(child: CircularProgressIndicator()));
-    } else if (_isTracking) {
-      botonesAccion.add(
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.red, foregroundColor: Colors.white,
-            minimumSize: const Size(double.infinity, 50),
-          ),
-          onPressed: _terminarRuta,
-          child: const Text('TERMINAR RUTA ACTUAL', style: TextStyle(fontSize: 16)),
-        )
-      );
-    } else {
-       if (_currentEstadoVehiculo == 'en_terminal_1' || _currentEstadoVehiculo == 'fuera_de_servicio') {
-         botonesAccion.add(
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green, foregroundColor: Colors.white,
-                minimumSize: const Size(double.infinity, 50),
-              ),
-              onPressed: () => _iniciarRuta('ida'),
-              child: Text('INICIAR IDA (hacia $_nombreTerminal2)', style: const TextStyle(fontSize: 16)),
-            )
-         );
-       }
-       if ((_currentEstadoVehiculo == 'en_terminal_1' || _currentEstadoVehiculo == 'fuera_de_servicio') &&
-           (_currentEstadoVehiculo == 'en_terminal_2' || _currentEstadoVehiculo == 'fuera_de_servicio')) {
-          botonesAccion.add(const SizedBox(height: 10));
-       }
-       if (_currentEstadoVehiculo == 'en_terminal_2' || _currentEstadoVehiculo == 'fuera_de_servicio') {
-         botonesAccion.add(
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue, foregroundColor: Colors.white,
-                minimumSize: const Size(double.infinity, 50),
-              ),
-              onPressed: () => _iniciarRuta('vuelta'),
-              child: Text('INICIAR VUELTA (hacia $_nombreTerminal1)', style: const TextStyle(fontSize: 16)),
-            )
-         );
-       }
-       if (botonesAccion.isEmpty && !_isLoading) {
-          botonesAccion.add(const Text('Estado del vehículo no permite iniciar ruta.', textAlign: TextAlign.center,));
-       }
-    }
-
     return Scaffold(
-      appBar: AppBar(
-        title: Column( // Sin cambios...
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Conductor: $_nombreConductor', style: const TextStyle(fontSize: 16)),
-            Text('Vehículo: $_placaVehiculo ($_lineaNombre)', style: const TextStyle(fontSize: 12, color: Colors.white70)),
-          ],
-        ),
-        actions: [ // Sin cambios...
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Cerrar Sesión',
-            onPressed: () async {
-              if (_isTracking) {
-                _terminarRuta();
-              }
-              await FirebaseAuth.instance.signOut();
-            },
-          )
+      backgroundColor: const Color(0xFF0A0E21),
+      appBar: _buildAppBarFuturista(),
+      body: _buildBodyFuturista(),
+    );
+  }
+
+  AppBar _buildAppBarFuturista() {
+    return AppBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Hola, $_nombreConductor',
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w300,
+              color: Colors.white70,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            '$_placaVehiculo • $_lineaNombre',
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              color: Colors.white54,
+            ),
+          ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            // Panel de Estado (Sin cambios)...
-             Card(
-              color: _isLoading
-                  ? Colors.grey.shade300
-                  : _isTracking ? Colors.green.shade100 : Colors.amber.shade100,
-              child: ListTile(
-                leading: _isLoading
-                    ? const CircularProgressIndicator()
-                    : Icon(
-                        _isTracking ? Icons.route : Icons.local_parking,
-                        color: _isTracking ? Colors.green : Colors.orange,
-                        size: 30,
+      actions: [
+        IconButton(
+          icon: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.logout, color: Colors.white, size: 20),
+          ),
+          onPressed: () async {
+            if (_isTracking) _terminarRuta();
+            await FirebaseAuth.instance.signOut();
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBodyFuturista() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          // Panel de Estado Mejorado
+          _buildStatusPanel(),
+          const SizedBox(height: 24),
+
+          // Botones de Acción Principales
+          Expanded(
+            child: _buildActionSection(),
+          ),
+
+          // Panel de Configuración
+          _buildConfigPanel(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusPanel() {
+    return AnimatedBuilder(
+      animation: _pulseAnimation,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _isTracking ? _pulseAnimation.value : 1.0,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: _getStatusGradient(),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: _getStatusColor().withOpacity(0.3),
+                  blurRadius: 15,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                title: const Text('Estado Actual'),
-                subtitle: Text(_feedbackMessage, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      child: _isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : Icon(
+                              _isTracking ? Icons.radar : Icons.pending_actions,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _isTracking ? 'EN RUTA ACTIVA' : 'SERVICIO DETENIDO',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _feedbackMessage,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  LinearGradient _getStatusGradient() {
+    if (_isLoading) {
+      return const LinearGradient(
+        colors: [Color(0xFF636363), Color(0xFFa2ab58)],
+      );
+    }
+    return _isTracking 
+      ? const LinearGradient(
+          colors: [Color(0xFF00b09b), Color(0xFF96c93d)],
+        )
+      : const LinearGradient(
+          colors: [Color(0xFFff7e5f), Color(0xFFfeb47b)],
+        );
+  }
+
+  Color _getStatusColor() {
+    if (_isLoading) return const Color(0xFF636363);
+    return _isTracking ? const Color(0xFF00b09b) : const Color(0xFFff7e5f);
+  }
+
+  Widget _buildActionSection() {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF667eea)),
+        ),
+      );
+    }
+
+    if (_isTracking) {
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _buildActionButton(
+            text: 'FINALIZAR RUTA ACTUAL',
+            icon: Icons.stop_circle_outlined,
+            gradient: const LinearGradient(
+              colors: [Color(0xFFff416c), Color(0xFFff4b2b)],
+            ),
+            onPressed: _terminarRuta,
+          ),
+        ],
+      );
+    }
+
+    List<Widget> buttons = [];
+    
+    if (_currentEstadoVehiculo == 'en_terminal_1' || _currentEstadoVehiculo == 'fuera_de_servicio') {
+      buttons.add(
+        _buildActionButton(
+          text: 'INICIAR RUTA IDA',
+          subtitle: 'Hacia $_nombreTerminal2',
+          icon: Icons.play_arrow_rounded,
+          gradient: const LinearGradient(
+            colors: [Color(0xFF00b09b), Color(0xFF96c93d)],
+          ),
+          onPressed: () => _iniciarRuta('ida'),
+        ),
+      );
+    }
+
+    if (_currentEstadoVehiculo == 'en_terminal_2' || _currentEstadoVehiculo == 'fuera_de_servicio') {
+      if (buttons.isNotEmpty) {
+        buttons.add(const SizedBox(height: 12));
+      }
+      buttons.add(
+        _buildActionButton(
+          text: 'INICIAR RUTA VUELTA',
+          subtitle: 'Hacia $_nombreTerminal1',
+          icon: Icons.play_arrow_rounded,
+          gradient: const LinearGradient(
+            colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+          ),
+          onPressed: () => _iniciarRuta('vuelta'),
+        ),
+      );
+    }
+
+    if (buttons.isEmpty) {
+      buttons.add(
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withOpacity(0.1)),
+          ),
+          child: const Text(
+            'Estado del vehículo no permite iniciar ruta',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white54),
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: buttons,
+    );
+  }
+
+  Widget _buildActionButton({
+    required String text,
+    String? subtitle,
+    required IconData icon,
+    required Gradient gradient,
+    required VoidCallback onPressed,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: gradient,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: gradient.colors.first.withOpacity(0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: Colors.white, size: 24),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        text,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (subtitle != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          subtitle,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right, color: Colors.white),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildConfigPanel() {
+    return Column(
+      children: [
+        // Botones secundarios
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            children: [
+              _buildSecondaryButton(
+                icon: Icons.report_problem_outlined,
+                text: 'Reportar Incidente',
+                color: const Color(0xFFffa726),
+                onTap: _irAReportes,
               ),
-            ),
-            const SizedBox(height: 20),
+              if (_esAdmin) ...[
+                const SizedBox(height: 12),
+                _buildSecondaryButton(
+                  icon: Icons.edit_road_outlined,
+                  text: 'Modo Admin: Grabar Ruta',
+                  color: const Color(0xFFab47bc),
+                  onTap: _irAModoAdmin,
+                ),
+              ],
+            ],
+          ),
+        ),
 
-            // Botones de Acción (Sin cambios)...
-            ...botonesAccion,
+        const SizedBox(height: 20),
 
-            const SizedBox(height: 30),
-            const Divider(),
-
-            // --- BOTONES SECUNDARIOS (CON CAMBIO) ---
-            ListTile( // Reportar Incidente (Sin cambios)
-              leading: const Icon(Icons.report_problem_outlined),
-              title: const Text('Reportar Incidente'),
-              trailing: const Icon(Icons.arrow_forward_ios),
-              onTap: _irAReportes,
-            ),
-            // *** AQUÍ ESTÁ EL CAMBIO ***
-            // Solo muestra el ListTile si _esAdmin es true
-            if (_esAdmin)
-              ListTile(
-                leading: const Icon(Icons.edit_road_outlined, color: Colors.purple), // Color distinto para Admin
-                title: const Text('Modo Admin: Grabar Ruta'),
-                trailing: const Icon(Icons.arrow_forward_ios),
-                onTap: _irAModoAdmin,
+        // Slider de intervalo
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Intervalo de envío GPS',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${_intervaloSegundos.toInt()}s',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
+              const SizedBox(height: 12),
+              SliderTheme(
+                data: SliderThemeData(
+                  trackHeight: 6,
+                  thumbShape: const RoundSliderThumbShape(
+                    enabledThumbRadius: 12,
+                    disabledThumbRadius: 8,
+                  ),
+                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 20),
+                  activeTrackColor: const Color(0xFF667eea),
+                  inactiveTrackColor: Colors.white.withOpacity(0.1),
+                  thumbColor: const Color(0xFF667eea),
+                  overlayColor: const Color(0xFF667eea).withOpacity(0.2),
+                ),
+                child: Slider(
+                  value: _intervaloSegundos,
+                  min: 3,
+                  max: 30,
+                  divisions: 9,
+                  onChanged: (double value) {
+                    setState(() { _intervaloSegundos = value; });
+                    if (_isTracking) {
+                      _iniciarTimerGPS();
+                      setState(() {
+                        _feedbackMessage = 'Intervalo actualizado a ${_intervaloSegundos.toInt()} seg.';
+                      });
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 
-            // Slider de Intervalo (Sin cambios)...
-             const Spacer(),
-            Text(
-                'Intervalo de envío: ${_intervaloSegundos.toInt()} seg'),
-            Slider(
-              value: _intervaloSegundos,
-              min: 3, max: 30, divisions: 9,
-              label: _intervaloSegundos.toInt().toString(),
-              onChanged: (double value) {
-                setState(() { _intervaloSegundos = value; });
-                if (_isTracking) {
-                   _iniciarTimerGPS();
-                   setState(() {
-                     _feedbackMessage = 'Intervalo actualizado a ${_intervaloSegundos.toInt()} seg.';
-                   });
-                }
-              },
-            ),
-          ],
+  Widget _buildSecondaryButton({
+    required IconData icon,
+    required String text,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  text,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              Icon(Icons.arrow_forward_ios, color: Colors.white.withOpacity(0.5), size: 16),
+            ],
+          ),
         ),
       ),
     );
   }
 }
-

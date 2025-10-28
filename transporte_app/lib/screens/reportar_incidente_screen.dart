@@ -89,7 +89,7 @@ class _PantallaReportarIncidenteState extends State<PantallaReportarIncidente> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             DropdownButtonFormField<String>(
-              value: _tipoSeleccionado,
+              initialValue: _tipoSeleccionado,
               hint: const Text('Selecciona el tipo de incidente'),
               onChanged: (String? newValue) {
                 setState(() {

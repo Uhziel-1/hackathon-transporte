@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart'; // Asegúrate que este archivo exista en lib/
-import 'screens/pasajero_home_screen.dart'; // Importar la nueva pantalla
+import 'firebase_options.dart';
+import 'screens/pantalla_inicial.dart';
+import 'services/alertas_service.dart';
 
 void main() async {
-  // Asegurar inicialización de Flutter
   WidgetsFlutterBinding.ensureInitialized();
-  // Inicializar Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // 🔹 Iniciar el servicio de alertas
+  final alertasService = AlertasService();
+  await alertasService.init();
+
   runApp(const PasajeroApp());
 }
 
@@ -21,11 +25,11 @@ class PasajeroApp extends StatelessWidget {
     return MaterialApp(
       title: 'App Pasajero Juliaca',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightBlue), // Color diferente
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightBlue),
         useMaterial3: true,
       ),
       debugShowCheckedModeBanner: false,
-      home: const PasajeroHomeScreen(), // Pantalla principal del pasajero
+      home: const PantallaInicial(),
     );
   }
 }
