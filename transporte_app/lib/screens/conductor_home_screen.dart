@@ -53,6 +53,25 @@ class _PantallaPrincipalConductorState
     super.dispose();
   }
 
+  Future<String> _getNombrePOI(String? poiId, String nombrePorDefecto) async {
+    if (poiId == null || poiId.isEmpty) {
+      return nombrePorDefecto;
+    }
+    try {
+      final poiDoc = await FirebaseFirestore.instance
+          .collection('Ubicaciones_POI')
+          .doc(poiId)
+          .get();
+      if (poiDoc.exists) {
+        return poiDoc.data()?['nombre'] ?? nombrePorDefecto;
+      }
+      return 'Terminal (ID no F)'; // ID no encontrado
+    } catch (e) {
+      print("Error buscando nombre POI ($poiId): $e");
+      return 'Error Terminal';
+    }
+  }
+
   // --- Lógica de Búsqueda Inicial ---
   Future<void> _buscarDatosIniciales() async {
     setState(() { _isLoading = true; });
@@ -95,8 +114,18 @@ class _PantallaPrincipalConductorState
         final lineaDoc = await FirebaseFirestore.instance.collection('Lineas').doc(lineaId).get();
         if (lineaDoc.exists) {
            _lineaNombre = lineaDoc.data()?['nombre'] ?? '';
-           _nombreTerminal1 = lineaDoc.data()?['nombreTerminal1'] ?? 'Terminal 1';
-           _nombreTerminal2 = lineaDoc.data()?['nombreTerminal2'] ?? 'Terminal 2';
+           // Leer los IDs de las terminales (en lugar de los nombres)
+           final terminal1Id = lineaDoc.data()?['terminal1Id'] as String?;
+           final terminal2Id = lineaDoc.data()?['terminal2Id'] as String?;
+
+           // Buscar los nombres de forma asíncrona en paralelo
+           final nombres = await Future.wait([
+               _getNombrePOI(terminal1Id, 'Terminal 1'), // Usar helper
+               _getNombrePOI(terminal2Id, 'Terminal 2')  // Usar helper
+           ]);
+           
+           _nombreTerminal1 = nombres[0];
+           _nombreTerminal2 = nombres[1];
         }
       }
 

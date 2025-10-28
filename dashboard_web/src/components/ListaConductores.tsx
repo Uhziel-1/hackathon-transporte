@@ -249,10 +249,9 @@ export default function ListaConductores() {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-900 dark:divide-gray-700">
               {conductores.map((conductor) => (
-                <tr key={conductor.id} className={`hover:bg-gray-50 dark:hover:bg-gray-800 ${!conductor.authUid ? 'bg-yellow-50 dark:bg-yellow-900/50' : ''}`}> {/* Resaltar no vinculados */}
+                <tr key={conductor.id} className={`hover:bg-gray-50 dark:hover:bg-gray-800 ${!conductor.authUid ? 'bg-yellow-50 dark:bg-yellow-900/50' : ''}`}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{conductor.nombre}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {/* ... Icono Sí/No igual que antes ... */}
                     {conductor.esAdminRutas ? <span className="flex items-center text-green-600 dark:text-green-400"><ShieldCheck size={16} className="mr-1" /> Sí</span> : <span className="flex items-center text-gray-500 dark:text-gray-400"><ShieldOff size={16} className="mr-1" /> No</span>}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">

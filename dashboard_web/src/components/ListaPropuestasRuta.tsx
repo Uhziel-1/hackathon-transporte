@@ -202,7 +202,23 @@ export default function ListaPropuestasRuta() {
     return <div className="text-center p-4 text-red-500">{error}</div>;
   }
   if (propuestas.length === 0) {
-     return <div className="text-center p-4">No hay propuestas de ruta registradas.</div>;
+     return (
+      <div className="overflow-x-auto shadow-md rounded-lg">
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={() => setMostrarCreador(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 shadow"
+          >
+            + Crear nueva ruta
+          </button>
+        </div>
+        <div className="text-center p-4">No hay propuestas de ruta registradas.</div>;
+        
+        {mostrarCreador && (
+          <CreadorRutaModal onClose={() => setMostrarCreador(false)} />
+        )}
+      </div>
+     )
   }
 
   return (
@@ -270,7 +286,7 @@ export default function ListaPropuestasRuta() {
       )}
       {mostrarCreador && (
         <CreadorRutaModal onClose={() => setMostrarCreador(false)} />
-      )}
+      )}      
 
     </div>
   );
