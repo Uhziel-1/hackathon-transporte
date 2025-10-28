@@ -43,6 +43,7 @@ export async function POST(req: Request) {
     const alertas: Array<{ mensaje: string }> = [];
 
     for (const doc of vehiculosSnap.docs) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data = doc.data() as any;
       const ubic = data.ubicacionActual as GeoPoint | undefined;
       const lineaId = data.lineaId as string | undefined;

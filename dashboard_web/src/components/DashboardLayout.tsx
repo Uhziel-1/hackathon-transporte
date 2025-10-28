@@ -48,9 +48,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             <NavItem icon={Network} href="/lineas">Gestión de Líneas</NavItem>
             <NavItem icon={Route} href="/rutas">Gestión de Rutas</NavItem>
             <NavItem icon={Users} href="/conductores">Conductores</NavItem>
-            <NavItem icon={Truck} href="/vehiculos">Gestión de Vehículos</NavItem>
-            <NavItem icon={BarChart} href="/alertas">Alertas IA</NavItem>
-            <NavItem icon={Map} href="/ubicaciones">Ubicaciones POI</NavItem>
+            {/*<NavItem icon={Truck} href="/vehiculos">Gestión de Vehículos</NavItem>*/}
+            {/*<NavItem icon={BarChart} href="/alertas">Alertas IA</NavItem>*/}
+            {/*<NavItem icon={Map} href="/ubicaciones">Ubicaciones POI</NavItem>*/}
+            {/*
             <div className="pt-2 border-t border-gray-200 dark:border-gray-700 mt-2">
               <NavItem icon={Download} href="/armador-rutas">
                 Armador de Rutas KML
@@ -58,7 +59,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               <NavItem icon={PlayCircle} href="/simulador">
                 Simulador de Flota
               </NavItem>
-            </div>
+            </div>*/}
           </nav>
 
           {/* Footer del Sidebar (Logout) */}
