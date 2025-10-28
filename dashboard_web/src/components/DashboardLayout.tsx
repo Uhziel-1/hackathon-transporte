@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useAuth } from '@/app/context/AuthContext'; // Hook para obtener usuario
-import { LogOut, Map, AlertTriangle, Route, Users, BarChart, PlayCircle, Network, Truck } from 'lucide-react'; // Iconos
+import { LogOut, Map, AlertTriangle, Route, Users, BarChart, PlayCircle, Network, Truck, Download } from 'lucide-react'; // Iconos
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -52,6 +52,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             <NavItem icon={BarChart} href="/alertas">Alertas IA</NavItem>
             <NavItem icon={Map} href="/ubicaciones">Ubicaciones POI</NavItem>
             <div className="pt-2 border-t border-gray-200 dark:border-gray-700 mt-2">
+              <NavItem icon={Download} href="/armador-rutas">
+                Armador de Rutas KML
+              </NavItem>
               <NavItem icon={PlayCircle} href="/simulador">
                 Simulador de Flota
               </NavItem>
