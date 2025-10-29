@@ -1,8 +1,8 @@
+import 'dart:async';
+import 'dart:convert';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:geolocator/geolocator.dart';
-import 'dart:async';
-import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class AlertasService {
@@ -14,46 +14,52 @@ class AlertasService {
   final FlutterTts _tts = FlutterTts();
   Timer? _timer;
 
+  // 🧩 URL del backend que ya probaste en Postman
+  final String _apiUrl = "https://hackathon-transporte-5q28.vercel.app/api/alertas";
+
   Future<void> init() async {
-    // Configuración de notificaciones locales
+    // 🔹 Inicializar notificaciones locales
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
     const initSettings = InitializationSettings(android: androidSettings);
     await _notificaciones.initialize(initSettings);
 
-    // Configuración del texto a voz (TTS)
+    // 🔹 Configurar voz
     await _tts.setLanguage('es-ES');
     await _tts.setSpeechRate(0.5);
-    await _tts.setVolume(1.0);
 
-    // Verificar permisos de ubicación
+    // 🔹 Permiso de ubicación
+    await _ensureLocationPermission();
+
+    // 🔹 Revisar alertas cada 15 segundos 🔥
+    _timer = Timer.periodic(const Duration(seconds: 15), (_) => _checkNearbyLine());
+  }
+
+  Future<void> _ensureLocationPermission() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      print("Los servicios de ubicación están desactivados.");
+      return;
+    }
+
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        print("⚠️ Permiso de ubicación denegado, no se pueden obtener alertas.");
-        return;
+        print("Permiso de ubicación denegado.");
       }
     }
-
-    if (permission == LocationPermission.deniedForever) {
-      print("🚫 Permiso de ubicación denegado permanentemente.");
-      return;
-    }
-
-    // Iniciar temporizador para verificar alertas cada 30 segundos
-    _timer = Timer.periodic(const Duration(seconds: 30), (_) => _checkNearbyLine());
-    print("✅ AlertasService inicializado correctamente.");
   }
 
   Future<void> _checkNearbyLine() async {
     try {
       final pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
 
-      // Llamar al backend de alertas
       final response = await http.post(
-        Uri.parse('https://tu-backend.vercel.app/api/alertas'),
+        Uri.parse(_apiUrl),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'ubicacionUsuario': {'lat': pos.latitude, 'lng': pos.longitude}}),
+        body: jsonEncode({
+          'ubicacionUsuario': {'lat': pos.latitude, 'lng': pos.longitude}
+        }),
       );
 
       if (response.statusCode != 200) {
@@ -64,12 +70,14 @@ class AlertasService {
       final data = jsonDecode(response.body);
       final alertas = data['alertas'] as List<dynamic>? ?? [];
 
+      if (alertas.isEmpty) return;
+
       for (var alerta in alertas) {
         final mensaje = alerta['mensaje'] ?? '';
         if (mensaje.isNotEmpty) {
-          // Mostrar notificación local
+          // 🔔 Mostrar notificación
           await _notificaciones.show(
-            DateTime.now().millisecondsSinceEpoch ~/ 1000,
+            DateTime.now().millisecondsSinceEpoch ~/ 1000, // id único
             "🚍 Alerta de Transporte",
             mensaje,
             const NotificationDetails(
@@ -82,9 +90,8 @@ class AlertasService {
             ),
           );
 
-          // Reproducir el mensaje con voz
+          // 🔊 Leer en voz alta
           await _tts.speak(mensaje);
-          print("🔔 Alerta hablada: $mensaje");
         }
       }
     } catch (e) {
@@ -94,6 +101,5 @@ class AlertasService {
 
   void dispose() {
     _timer?.cancel();
-    print("🛑 AlertasService detenido.");
   }
 }

@@ -10,9 +10,8 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // 🔹 Iniciar el servicio de alertas
-  final alertasService = AlertasService();
-  await alertasService.init();
+  // 🔔 Iniciar el servicio de alertas
+  await AlertasService().init();
 
   runApp(const PasajeroApp());
 }
