@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useAuth } from '@/app/context/AuthContext'; // Hook para obtener usuario
-import { LogOut, Map, AlertTriangle, Route, Users, BarChart, PlayCircle, Network, Truck, Download } from 'lucide-react'; // Iconos
+import { LogOut, Map, AlertTriangle, Route, Users, BarChart, PlayCircle, Network, Truck, Download, MapPin } from 'lucide-react'; // Iconos
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -58,6 +58,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               </NavItem>
               <NavItem icon={PlayCircle} href="/simulador">
                 Simulador de Flota
+              </NavItem>
+              <NavItem icon={MapPin} href="https://mapalisto.vercel.app/">
+                Mapa de de Rutas
               </NavItem>
             </div>
           </nav>
