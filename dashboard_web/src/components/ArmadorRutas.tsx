@@ -408,8 +408,10 @@ export default function ArmadorRutas() {
             </select>
           </div>
         </div>
-        <div className="flex-1 min-h-[200px]">
+        <div className="flex-1 min-h-[200px] max-h-[400px] overflow-hidden rounded-md border dark:border-gray-700">
+        <div className="h-full">
           <PreviewMap polyline={previewPolyline} />
+        </div>
         </div>
         <button
           onClick={handleSaveToFirestore}
